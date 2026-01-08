@@ -2,6 +2,8 @@
 
 a clean, practical productivity tool for managing tasks and staying focused.
 
+> **Note:** All data is stored locally in your browser. Nothing is sent to any server.
+
 ## what it does
 
 **focus space** is a personal workspace that combines:

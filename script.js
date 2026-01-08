@@ -1,3 +1,8 @@
+/**
+ * Focus Space - Productivity App
+ * A clean workspace for managing tasks and staying focused
+ */
+
 // DOM Elements
 const timerTime = document.getElementById('timerTime');
 const startTimer = document.getElementById('startTimer');
@@ -20,6 +25,7 @@ const saveTask = document.getElementById('saveTask');
 const cancelTask = document.getElementById('cancelTask');
 const deleteTask = document.getElementById('deleteTask');
 const modalTitle = document.getElementById('modalTitle');
+const clearDataBtn = document.getElementById('clearDataBtn');
 
 // State
 let timerInterval = null;
@@ -36,13 +42,18 @@ let todayStats = {
 
 // Initialize
 function init() {
-    updateDate();
-    loadData();
-    setupEventListeners();
-    renderTasks();
-    renderFocusItems();
-    updateStats();
-    updateTimerDisplay();
+    try {
+        updateDate();
+        loadData();
+        setupEventListeners();
+        renderTasks();
+        renderFocusItems();
+        updateStats();
+        updateTimerDisplay();
+        updateTaskCount();
+    } catch (error) {
+        console.error('Initialization error:', error);
+    }
 }
 
 function updateDate() {
@@ -91,7 +102,9 @@ function resetTimerFunc() {
 }
 
 function setTimerPreset(minutes) {
-    if (isRunning) pauseTimerFunc();
+    if (isRunning) {
+        pauseTimerFunc();
+    }
     timerSeconds = minutes * 60;
     updateTimerDisplay();
 }
@@ -112,13 +125,15 @@ function completeSession() {
     saveData();
     
     // Notification
-    if (Notification.permission === 'granted') {
-        new Notification('Focus session complete!', {
-            body: 'Great work! Take a break.',
-            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%232563eb"/></svg>'
-        });
-    } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission();
+    if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+            new Notification('Focus session complete!', {
+                body: 'Great work! Take a break.',
+                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%232563eb"/></svg>'
+            });
+        } else if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
     }
     
     // Reset timer
@@ -129,7 +144,10 @@ function completeSession() {
 // Focus Items
 function addFocusItem() {
     const text = focusInput.value.trim();
-    if (!text) return;
+    if (!text) {
+        focusInput.focus();
+        return;
+    }
     
     const item = {
         id: Date.now(),
@@ -230,6 +248,7 @@ function saveTaskFunc() {
     }
     
     renderTasks();
+    updateTaskCount();
     saveData();
     closeTaskModal();
 }
@@ -251,6 +270,7 @@ function toggleTask(id) {
         task.completed = !task.completed;
         task.updatedAt = Date.now();
         renderTasks();
+        updateTaskCount();
         saveData();
     }
 }
@@ -263,6 +283,7 @@ function renderTasks() {
                 <p class="empty-hint">click "new task" to get started</p>
             </div>
         `;
+        updateTaskCount();
         return;
     }
     
@@ -301,9 +322,13 @@ function renderTasks() {
             openTaskModal(id);
         });
     });
+    
+    updateTaskCount();
 }
 
+// Escape HTML to prevent XSS
 function escapeHtml(text) {
+    if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
@@ -318,6 +343,15 @@ function updateStats() {
     
     todayMinutes.textContent = todayStats.minutes;
     todaySessions.textContent = todayStats.sessions;
+}
+
+// Update task count in header
+function updateTaskCount() {
+    const incompleteCount = tasks.filter(t => !t.completed).length;
+    const countBadge = document.getElementById('taskCountBadge');
+    if (countBadge) {
+        countBadge.textContent = incompleteCount > 0 ? `(${incompleteCount})` : '';
+    }
 }
 
 // Storage
@@ -340,8 +374,8 @@ function loadData() {
         if (!data) return;
         
         const parsed = JSON.parse(data);
-        tasks = parsed.tasks || [];
-        focusItems = parsed.focusItems || [];
+        tasks = Array.isArray(parsed.tasks) ? parsed.tasks : [];
+        focusItems = Array.isArray(parsed.focusItems) ? parsed.focusItems : [];
         
         if (parsed.stats) {
             const today = new Date().toDateString();
@@ -351,6 +385,8 @@ function loadData() {
         }
     } catch (e) {
         console.error('Failed to load:', e);
+        // Clear corrupted data
+        localStorage.removeItem('focusSpace');
     }
 }
 
@@ -407,7 +443,29 @@ function setupEventListeners() {
     if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
     }
+    
+    // Clear data button
+    clearDataBtn.addEventListener('click', () => {
+        if (confirm('clear all data? this will delete all tasks, focus items, and stats. this cannot be undone.')) {
+            localStorage.removeItem('focusSpace');
+            tasks = [];
+            focusItems = [];
+            todayStats = { minutes: 0, sessions: 0, date: new Date().toDateString() };
+            timerSeconds = 25 * 60;
+            if (isRunning) pauseTimerFunc();
+            updateTimerDisplay();
+            renderTasks();
+            renderFocusItems();
+            updateStats();
+            updateTaskCount();
+            alert('all data cleared');
+        }
+    });
 }
 
-// Initialize
-init();
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}

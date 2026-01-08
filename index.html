@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A clean productivity workspace for managing tasks and staying focused">
     <title>focus space</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="styles.css">
@@ -63,7 +64,11 @@
                     <p class="date-subtitle">what are you working on?</p>
                 </div>
                 <div class="header-actions">
-                    <button id="newTaskBtn" class="action-btn primary">+ new task</button>
+                    <button id="newTaskBtn" class="action-btn primary">
+                        + new task
+                        <span id="taskCountBadge" class="task-count-badge"></span>
+                    </button>
+                    <button id="clearDataBtn" class="action-btn secondary" title="Clear all data">clear data</button>
                 </div>
             </header>
 
