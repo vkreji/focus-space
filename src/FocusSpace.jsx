@@ -1,5 +1,60 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Plus, Trash2, Check, X, Clock, Target, Zap, Calendar } from 'lucide-react':
+import React, { useState, useEffect } from 'react';
+import { Play, Pause, RotateCcw, Plus, Trash2, Check, X, Clock, Target, Zap } from 'lucide-react';
+
+const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+};
+
+const RadialMenu = ({ onClose, setShowModal, setTime, setTasks, setFocusItems }) => {
+    const options = [
+        { icon: Plus, label: 'New Task', angle: 0, action: () => { setShowModal(true); onClose(); } },
+        { icon: Clock, label: '25m', angle: 60, action: () => { setTime(25 * 60); onClose(); } },
+        { icon: Target, label: '45m', angle: 120, action: () => { setTime(45 * 60); onClose(); } },
+        { icon: Zap, label: '60m', angle: 180, action: () => { setTime(60 * 60); onClose(); } },
+        { icon: Trash2, label: 'Clear', angle: 240, action: () => { setTasks([]); setFocusItems([]); onClose(); } },
+        { icon: X, label: 'Close', angle: 300, action: onClose }
+    ];
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+        >
+            <div
+                className="relative w-80 h-80"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="absolute inset-0 rounded-full border border-zinc-800" />
+                {options.map((opt, i) => {
+                    const rad = (opt.angle * Math.PI) / 180;
+                    const Icon = opt.icon;
+                    return (
+                        <button
+                            key={i}
+                            className="absolute w-14 h-14 rounded-full bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white shadow-none transition-all"
+                            style={{
+                                left: '50%',
+                                top: '50%',
+                                transform: `translate(-50%, -50%) translate(${Math.cos(rad) * 110}px, ${Math.sin(rad) * 110}px)`
+                            }}
+                            onClick={opt.action}
+                        >
+                            <Icon size={20} />
+                            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-widest text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                {opt.label}
+                            </span>
+                        </button>
+                    );
+                })}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center">
+                    <span className="text-zinc-500 font-mono text-[10px] tracking-widest uppercase">Select</span>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const FocusSpace = () => {
     const [time, setTime] = useState(25 * 60);
@@ -11,7 +66,6 @@ const FocusSpace = () => {
     const [stats, setStats] = useState({ minutes: 0, sessions: 0 });
     const [showRadialMenu, setShowRadialMenu] = useState(false);
 
-    // Timer logic
     useEffect(() => {
         let interval;
         if (isRunning && time > 0) {
@@ -29,66 +83,8 @@ const FocusSpace = () => {
         return () => clearInterval(interval);
     }, [isRunning, time]);
 
-    const formatTime = (seconds) => {
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    };
-
-    const RadialMenu = ({ onClose }) => {
-        const options = [
-            { icon: Plus, label: 'New Task', angle: 0, action: () => { setShowModal(true); onClose(); } },
-            { icon: Clock, label: '25m', angle: 60, action: () => { setTime(25 * 60); onClose(); } },
-            { icon: Target, label: '45m', angle: 120, action: () => { setTime(45 * 60); onClose(); } },
-            { icon: Zap, label: '60m', angle: 180, action: () => { setTime(60 * 60); onClose(); } },
-            { icon: Trash2, label: 'Clear', angle: 240, action: () => { setTasks([]); setFocusItems([]); onClose(); } },
-            { icon: X, label: 'Close', angle: 300, action: onClose }
-        ];
-
-        return (
-            <div
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-                onClick={onClose}
-            >
-                <div
-                    className="relative w-80 h-80"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div className="absolute inset-0 rounded-full border border-zinc-800" />
-                    {options.map((opt, i) => {
-                        const rad = (opt.angle * Math.PI) / 180;
-                        const Icon = opt.icon;
-                        return (
-                            <button
-                                key={i}
-                                className="absolute w-14 h-14 rounded-full bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white shadow-none transition-all"
-                                style={{
-                                    left: '50%',
-                                    top: '50%',
-                                    transform: `translate(-50%, -50%) translate(${Math.cos(rad) * 110}px, ${Math.sin(rad) * 110}px)`
-                                }}
-                                onClick={opt.action}
-                            >
-                                <Icon size={20} />
-                                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-widest text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                    {opt.label}
-                                </span>
-                            </button>
-                        );
-                    })}
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center">
-                        <span className="text-zinc-500 font-mono text-[10px] tracking-widest uppercase">Select</span>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
     return (
         <div className="relative w-full h-screen overflow-hidden bg-zinc-950 text-zinc-100 font-sans selection:bg-zinc-100 selection:text-zinc-900">
-            {/* Background */}
-
-            {/* FAB */}
             <button
                 className="fixed bottom-10 right-10 w-14 h-14 rounded-full bg-white text-zinc-950 shadow-none hover:bg-zinc-200 transition-colors z-40 flex items-center justify-center"
                 onClick={() => setShowRadialMenu(true)}
@@ -99,13 +95,14 @@ const FocusSpace = () => {
             {showRadialMenu && (
                 <RadialMenu
                     onClose={() => setShowRadialMenu(false)}
+                    setShowModal={setShowModal}
+                    setTime={setTime}
+                    setTasks={setTasks}
+                    setFocusItems={setFocusItems}
                 />
             )}
 
-            {/* Layout */}
             <div className="relative z-10 grid grid-cols-12 grid-rows-6 gap-6 p-10 h-full max-w-[1600px] mx-auto">
-
-                {/* Header */}
                 <div className="col-span-12 row-span-1 border-b border-zinc-800 flex items-center justify-between py-4 mb-4">
                     <div className="flex items-center gap-8">
                         <h1 className="text-2xl font-medium tracking-tight text-white uppercase italic">
@@ -128,7 +125,6 @@ const FocusSpace = () => {
                     </div>
                 </div>
 
-                {/* Timer */}
                 <div className="col-span-5 row-span-5 border border-zinc-800 rounded-none p-12 flex flex-col items-center justify-center relative bg-zinc-950/50">
                     <div className="w-full flex flex-col items-center">
                         <div className="mb-12">
@@ -160,7 +156,6 @@ const FocusSpace = () => {
                     </div>
                 </div>
 
-                {/* Task List */}
                 <div className="col-span-7 row-span-3 border border-zinc-800 rounded-none p-8 flex flex-col overflow-hidden bg-zinc-950/50">
                     <div className="flex justify-between items-center mb-10">
                         <h2 className="text-xs uppercase tracking-[0.3em] text-zinc-500 font-mono">Objectives</h2>
@@ -213,7 +208,6 @@ const FocusSpace = () => {
                     </div>
                 </div>
 
-                {/* Focus Input */}
                 <div className="col-span-7 row-span-2 border border-zinc-800 rounded-none p-8 flex flex-col bg-zinc-950/50">
                     <h3 className="text-xs uppercase tracking-[0.3em] text-zinc-500 font-mono mb-6">Focus</h3>
 
@@ -254,7 +248,6 @@ const FocusSpace = () => {
                 </div>
             </div>
 
-            {/* Edit Modal */}
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/90 backdrop-blur-sm p-6">
                     <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md shadow-2xl">
