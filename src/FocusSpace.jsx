@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Plus, Trash2, Check, X, Clock, Target, Zap } from 'lucide-react';
 
 const formatTime = (seconds) => {
@@ -56,15 +56,91 @@ const RadialMenu = ({ onClose, setShowModal, setTime, setTasks, setFocusItems })
     );
 };
 
+const STORAGE_KEY = 'focusSpace';
+
+const loadFromStorage = () => {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        const today = new Date().toDateString();
+        const stats = data.stats && data.stats.date === today
+            ? data.stats
+            : { minutes: 0, sessions: 0, date: today };
+        const tasks = Array.isArray(data.tasks)
+            ? data.tasks.map((t) => ({
+                id: t.id,
+                title: t.title ?? '',
+                notes: t.notes ?? '',
+                priority: t.priority ?? 'normal',
+                completed: Boolean(t.completed),
+            }))
+            : [];
+        const focusItems = Array.isArray(data.focusItems)
+            ? data.focusItems.map((f) => ({
+                id: f.id,
+                text: f.text ?? '',
+                completed: Boolean(f.completed),
+            }))
+            : [];
+        return {
+            tasks,
+            focusItems,
+            stats,
+            time: typeof data.time === 'number' ? data.time : 25 * 60,
+        };
+    } catch {
+        return null;
+    }
+};
+
+const saveToStorage = (tasks, focusItems, stats, time) => {
+    try {
+        const today = new Date().toDateString();
+        const statsToSave = { ...stats, date: today };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            tasks,
+            focusItems,
+            stats: statsToSave,
+            time
+        }));
+    } catch (e) {
+        console.error('Failed to save to localStorage:', e);
+    }
+};
+
 const FocusSpace = () => {
-    const [time, setTime] = useState(25 * 60);
+    const [time, setTime] = useState(() => {
+        const d = loadFromStorage();
+        return typeof d?.time === 'number' ? d.time : 25 * 60;
+    });
     const [isRunning, setIsRunning] = useState(false);
-    const [tasks, setTasks] = useState([]);
-    const [focusItems, setFocusItems] = useState([]);
+    const [tasks, setTasks] = useState(() => {
+        const d = loadFromStorage();
+        return Array.isArray(d?.tasks) ? d.tasks : [];
+    });
+    const [focusItems, setFocusItems] = useState(() => {
+        const d = loadFromStorage();
+        return Array.isArray(d?.focusItems) ? d.focusItems : [];
+    });
     const [showModal, setShowModal] = useState(false);
     const [editingTask, setEditingTask] = useState(null);
-    const [stats, setStats] = useState({ minutes: 0, sessions: 0 });
+    const [stats, setStats] = useState(() => {
+        const d = loadFromStorage();
+        const today = new Date().toDateString();
+        if (d?.stats && d.stats.date === today) return d.stats;
+        return { minutes: 0, sessions: 0, date: today };
+    });
     const [showRadialMenu, setShowRadialMenu] = useState(false);
+    const isFirstMount = useRef(true);
+
+    useEffect(() => {
+        if (isFirstMount.current) {
+            isFirstMount.current = false;
+            return;
+        }
+        saveToStorage(tasks, focusItems, stats, time);
+    }, [tasks, focusItems, stats, time]);
 
     useEffect(() => {
         let interval;
@@ -319,14 +395,19 @@ const FocusSpace = () => {
                                 </button>
                                 <button
                                     onClick={() => {
-                                        const title = document.getElementById('taskTitle').value;
-                                        const notes = document.getElementById('taskNotes').value;
-                                        const priority = document.getElementById('taskPriority').value;
+                                        const title = document.getElementById('taskTitle').value?.trim() ?? '';
+                                        const notes = document.getElementById('taskNotes').value?.trim() ?? '';
+                                        const priority = document.getElementById('taskPriority').value ?? 'normal';
+
+                                        if (!title && !editingTask) return;
 
                                         if (editingTask) {
-                                            setTasks(tasks.map(t => t.id === editingTask.id ? { ...t, title, notes, priority } : t));
+                                            const newTasks = tasks.map(t => t.id === editingTask.id ? { ...t, title: title || t.title, notes, priority } : t);
+                                            setTasks(newTasks);
                                         } else {
-                                            setTasks([...tasks, { id: Date.now(), title, notes, priority, completed: false }]);
+                                            const newTask = { id: Date.now(), title, notes, priority, completed: false };
+                                            const newTasks = [...tasks, newTask];
+                                            setTasks(newTasks);
                                         }
                                         setShowModal(false);
                                         setEditingTask(null);
