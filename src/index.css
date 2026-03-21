@@ -105,6 +105,15 @@ button {
   color: var(--text-secondary);
 }
 
+.sidebar-header img {
+  width: 20px;
+  height: 20px;
+}
+
+body.dark .sidebar-header img {
+  filter: invert(1);
+}
+
 .sidebar-nav {
   display: flex;
   flex-direction: column;
@@ -469,4 +478,24 @@ button {
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
   backdrop-filter: blur(4px);
+}
+
+/* Journal */
+#journal-input {
+  width: 100%;
+  flex: 1;
+  min-height: 400px;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-family);
+  font-size: 16px;
+  color: var(--text-primary);
+  line-height: 1.8;
+  padding: 0;
+}
+
+#journal-input::placeholder {
+  color: var(--text-placeholder);
 }

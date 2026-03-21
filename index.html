@@ -7,7 +7,98 @@
     <title>Focus Space</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div class="layout-container">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <div class="sidebar-header">
+            <img src="/favicon.svg" alt="Focus Space" style="width: 20px; height: 20px;">
+            <span>Focus Space</span>
+          </div>
+          <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-view="dashboard">
+              <span class="icon" data-icon="home"></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-view="whiteboard">
+              <span class="icon" data-icon="pen"></span>
+              <span>Whiteboard</span>
+            </a>
+            <a href="#" class="nav-item" data-view="journal">
+              <span class="icon" data-icon="book"></span>
+              <span>Journal</span>
+            </a>
+          </nav>
+          <div style="margin-top: auto; padding: 0 8px 16px;">
+            <a href="#" class="nav-item" id="btn-toggle-theme">
+              <span class="icon" data-icon="theme"></span>
+              <span>Theme</span>
+            </a>
+          </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+          <header class="topbar">
+            <h1 class="page-title" id="page-title">Dashboard</h1>
+            <div class="topbar-actions">
+              <div class="stats-container">
+                <span>Sessions: <span id="stat-sessions">0</span></span>
+                <span>Focus: <span id="stat-minutes">0</span>m</span>
+              </div>
+            </div>
+          </header>
+
+          <div class="content-body">
+
+            <!-- Dashboard -->
+            <div id="view-dashboard" class="view-container active">
+              <div class="timer-block">
+                <div class="timer-display" id="timer-display">25:00</div>
+                <div class="timer-controls">
+                  <button class="btn" id="btn-toggle-timer">
+                    <span class="icon" data-icon="play"></span>
+                    <span id="timer-btn-label">Start</span>
+                  </button>
+                  <button class="btn btn-icon" id="btn-reset-timer">
+                    <span class="icon" data-icon="reset"></span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="tasks-container">
+                <div class="tasks-header"><h2>Objectives</h2></div>
+                <div class="task-list" id="task-list"></div>
+                <button class="add-task-btn" id="btn-create-task">
+                  <span class="icon" data-icon="plus"></span>
+                  <span>New Objective</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Whiteboard -->
+            <div id="view-whiteboard" class="view-container">
+              <div class="whiteboard-wrapper">
+                <canvas id="whiteboard-canvas" class="whiteboard-canvas"></canvas>
+                <div class="whiteboard-toolbar">
+                  <button class="btn" id="btn-clear-canvas" style="font-size: 12px; padding: 4px 8px;">Clear</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Journal -->
+            <div id="view-journal" class="view-container">
+              <textarea id="journal-input" placeholder="Start typing... Everything is auto-saved."></textarea>
+            </div>
+
+          </div>
+        </main>
+
+      </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
