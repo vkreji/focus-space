@@ -1,3 +1,6 @@
-# focus_space
+# focus space
 
-Minimalist focus timer and task manager.
+a place to focus.
+- pomodoro, tasks, whiteboard, journal.
+- Vanilla JS and CSS
+- wip
